@@ -1,8 +1,6 @@
 package Fabrica_EAP05.Reservas.Service;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import Fabrica_EAP05.Reservas.Config.JwtUtil;
@@ -26,29 +24,25 @@ public class AuthService {
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
     public LoginResponseDTO login(LoginDTO dto) {
-        Usuario usuario = usuarioRepository.findByCorreo(dto.getCorreo())
-                .orElseThrow(() -> new IllegalArgumentException("Correo o contraseña incorrectos"));
+        // 1. Buscar perfil local por email
+        Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        if (!passwordEncoder.matches(dto.getContrasena(), usuario.getContrasena())) {
-            throw new IllegalArgumentException("Correo o contraseña incorrectos");
-        }
-
+        // 2. Verificar estado del usuario en tu base de datos
         if (Boolean.FALSE.equals(usuario.getActivo())) {
             throw new IllegalArgumentException("El usuario se encuentra inactivo");
         }
 
-        String token = jwtUtil.generarToken(usuario.getCorreo(), usuario.getRol());
-        inactivityTrackingService.registrarActividad(usuario.getCorreo());
+        // 3. Generar token y registrar actividad
+        String token = jwtUtil.generarToken(usuario.getEmail(), usuario.getRol());
+        inactivityTrackingService.registrarActividad(usuario.getEmail());
 
-        return new LoginResponseDTO(token, usuario.getCorreo(), usuario.getRol());
+        return new LoginResponseDTO(token, usuario.getEmail(), usuario.getRol());
     }
 
-    public void logout(String correo, String token) {
-        inactivityTrackingService.cerrarSesion(correo);
+    public void logout(String email, String token) {
+        inactivityTrackingService.cerrarSesion(email);
         
         if (token != null && !token.isEmpty()) {
             tokenBlacklistService.agregarTokenALista(token);

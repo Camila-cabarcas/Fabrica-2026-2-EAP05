@@ -39,7 +39,7 @@ public class JwtUtil {
                 .getBody();
     }
 
-    public String extraerCorreo(String token) {
+    public String extraerEmail(String token) {
         return extraerClaims(token).getSubject();
     }
     public String extraerRol(String token) {

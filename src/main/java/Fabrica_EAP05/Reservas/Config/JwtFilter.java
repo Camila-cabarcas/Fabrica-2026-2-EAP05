@@ -56,19 +56,19 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             if (jwtUtil.validarToken(token)) {
-                String correo = jwtUtil.extraerCorreo(token);
-                Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
+                String email = jwtUtil.extraerEmail(token);
+                Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
 
                 if (usuario != null && Boolean.TRUE.equals(usuario.getActivo())) {
-                    if (inactivityTrackingService.validarActividad(correo)) {
-                        inactivityTrackingService.registrarActividad(correo);
+                    if (inactivityTrackingService.validarActividad(email)) {
+                        inactivityTrackingService.registrarActividad(email);
 
                         // Asignar el rol al contexto de seguridad
                         String rol = usuario.getRol() != null ? usuario.getRol().name() : "cliente";
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase());
 
                         UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(correo, null, List.of(authority));
+                                new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     } else {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
