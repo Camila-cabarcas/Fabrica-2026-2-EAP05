@@ -1,5 +1,7 @@
 package Fabrica_EAP05.Reservas.Config;
 
+import Fabrica_EAP05.Reservas.Entities.Rol;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,28 +21,34 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generarToken(String correo) {
+    public String generarToken(String correo,Rol rol) {
         return Jwts.builder()
                 .setSubject(correo)
+                .claim("rol", rol != null ? rol.name() : "cliente")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRACION))
                 .signWith(key)
                 .compact();
     }
 
-
-    public String extraerCorreo(String token) {
+    public Claims extraerClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+    }
+
+    public String extraerCorreo(String token) {
+        return extraerClaims(token).getSubject();
+    }
+    public String extraerRol(String token) {
+        return extraerClaims(token).get("rol", String.class);
     }
 
     public boolean validarToken(String token) {
         try {
-            extraerCorreo(token);
+            extraerClaims(token);
             return true;
         } catch (Exception e) {
             return false;

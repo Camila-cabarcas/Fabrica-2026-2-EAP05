@@ -37,10 +37,14 @@ public class AuthService {
             throw new IllegalArgumentException("Correo o contraseña incorrectos");
         }
 
-        String token = jwtUtil.generarToken(usuario.getCorreo());
+        if (Boolean.FALSE.equals(usuario.getActivo())) {
+            throw new IllegalArgumentException("El usuario se encuentra inactivo");
+        }
+
+        String token = jwtUtil.generarToken(usuario.getCorreo(), usuario.getRol());
         inactivityTrackingService.registrarActividad(usuario.getCorreo());
 
-        return new LoginResponseDTO(token, usuario.getCorreo());
+        return new LoginResponseDTO(token, usuario.getCorreo(), usuario.getRol());
     }
 
     public void logout(String correo, String token) {

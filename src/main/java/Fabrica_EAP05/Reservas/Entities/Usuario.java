@@ -29,4 +29,8 @@ public class Usuario {
     private String contrasena;
     private String direccion;
     private String telefono;
+    @Enumerated(EnumType.STRING)
+    private Rol rol = Rol.cliente; // Valor por defecto
+
+    private Boolean activo = true;
 }
