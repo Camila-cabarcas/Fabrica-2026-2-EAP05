@@ -11,7 +11,7 @@ public class LoginDTO {
 
     @Email(message = "El correo no es válido")
     @NotBlank(message = "El correo es obligatorio")
-    private String correo;
+    private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String contrasena;
