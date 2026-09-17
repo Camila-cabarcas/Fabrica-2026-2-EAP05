@@ -3,6 +3,7 @@ package Fabrica_EAP05.Reservas.Controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,22 +27,23 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        
-        String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.replace("Bearer ", "");
-        }
-        
-        if (auth != null && auth.isAuthenticated()) {
-            String correo = (String) auth.getPrincipal();
-            authService.logout(correo, token);
-        }
-        
-        // Limpiar el contexto de seguridad
-        SecurityContextHolder.clearContext();
-        
-        return ResponseEntity.ok("Sesión cerrada exitosamente");
+public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+    if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No hay sesión activa");
     }
+
+    String token = null;
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        token = authHeader.replace("Bearer ", "");
+    }
+
+    String correo = (String) auth.getPrincipal();
+    authService.logout(correo, token);
+
+    SecurityContextHolder.clearContext();
+
+    return ResponseEntity.ok("Sesión cerrada exitosamente");
+}
 }
