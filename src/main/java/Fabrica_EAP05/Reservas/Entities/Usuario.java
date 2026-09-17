@@ -16,7 +16,7 @@ import lombok.Setter;
 public class Usuario {
 
     @Id
-    private UUID id; // Coincide directamente con auth.users.id (sin @GeneratedValue)
+    private UUID id; 
 
     @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
