@@ -65,7 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                         // Asignar el rol al contexto de seguridad
                         String rol = usuario.getRol() != null ? usuario.getRol().name() : "cliente";
-                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase());
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol);
 
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
