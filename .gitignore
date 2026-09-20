@@ -26,3 +26,5 @@ src/main/resources/application.properties
 
 target/
 src/main/resources/application.properties
+src/main/resources(1)/application.properties
+.env
