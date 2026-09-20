@@ -1,0 +1,6 @@
+spring.application.name=Reservas
+
+supabase.url=${SUPABASE_URL}
+supabase.anon-key=${SUPABASE_ANON_KEY}
+
+app.jwt.secret=${JWT_SECRET}
