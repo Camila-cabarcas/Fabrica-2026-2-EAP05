@@ -4,6 +4,7 @@ package Fabrica_EAP05.Reservas.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -55,6 +56,11 @@ public class SecurityConfig {
 
             // 3. Configurar permisos de rutas
             .authorizeHttpRequests(auth -> auth
+                // El preflight CORS (OPTIONS) no matchea contra requestMatchers(String...)
+                // porque Spring MVC no expone OPTIONS como handler real de la ruta;
+                // sin esta línea, cualquier request con Content-Type: application/json
+                // (que dispara preflight) cae en anyRequest().authenticated() -> 403.
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/usuario/registrar").permitAll()
                 .anyRequest().authenticated()
             )
