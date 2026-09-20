@@ -24,14 +24,21 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private SupabaseAuthService supabaseAuthService;
+
     @Override
     public UsuarioRegistroResponse registrarUsuario(UsuarioRegistroRequest request, Rol rolForzado) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RecursoDuplicadoException("El email ya está registrado");
         }
 
+        // public.usuario.id tiene FK a auth.users: hay que crear primero el
+        // usuario en Supabase Auth y usar el UUID que Supabase genera.
+        UUID authId = supabaseAuthService.crearUsuarioAuth(request.getEmail());
+
         Usuario usuario = new Usuario();
-        usuario.setId(UUID.randomUUID());
+        usuario.setId(authId);
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
         usuario.setTelefono(request.getTelefono());
@@ -39,12 +46,19 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuario.setRol(rolForzado);
         usuario.setActivo(true);
 
-        Usuario guardado = usuarioRepository.saveAndFlush(usuario);
+        Usuario recargado;
+        try {
+            Usuario guardado = usuarioRepository.saveAndFlush(usuario);
+            entityManager.detach(guardado);
 
-        entityManager.detach(guardado);
-
-        Usuario recargado = usuarioRepository.findById(guardado.getId())
-                .orElseThrow(() -> new IllegalStateException("No se pudo recuperar el usuario recién creado"));
+            recargado = usuarioRepository.findById(guardado.getId())
+                    .orElseThrow(() -> new IllegalStateException("No se pudo recuperar el usuario recién creado"));
+        } catch (RuntimeException e) {
+            // El insert local falló después de crear el auth user: limpiar
+            // para no dejar un usuario huérfano en Supabase Auth.
+            supabaseAuthService.eliminarUsuarioAuth(authId);
+            throw e;
+        }
 
         return new UsuarioRegistroResponse(
                 recargado.getId(),
