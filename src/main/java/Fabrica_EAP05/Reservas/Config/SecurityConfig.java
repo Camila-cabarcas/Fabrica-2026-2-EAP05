@@ -61,7 +61,9 @@ public class SecurityConfig {
                 // sin esta línea, cualquier request con Content-Type: application/json
                 // (que dispara preflight) cae en anyRequest().authenticated() -> 403.
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/usuario/registrar").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/usuario/registrar").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
             )
 
