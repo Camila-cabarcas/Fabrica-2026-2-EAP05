@@ -13,7 +13,7 @@ services:
         sync: false
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
         value: update
-      - key: JWT_SECRET
+      - key: APP_JWT_SECRET
         sync: false
       - key: SUPABASE_URL
         sync: false
