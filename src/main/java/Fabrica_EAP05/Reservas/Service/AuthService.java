@@ -85,8 +85,9 @@ public class AuthService {
                     String.class
             );
         } catch (HttpClientErrorException e) {
-            throw new IllegalArgumentException("Credenciales inválidas");
-        }
+    System.err.println("Supabase respondió: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+    throw new IllegalArgumentException("Credenciales inválidas");
+}
     }
 
     public void resetPassword(ResetPasswordRequest dto) {
