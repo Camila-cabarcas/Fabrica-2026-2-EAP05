@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import Fabrica_EAP05.Reservas.DTO.LoginDTO;
 import Fabrica_EAP05.Reservas.DTO.LoginResponseDTO;
+import Fabrica_EAP05.Reservas.DTO.ResetPasswordRequest;
 import Fabrica_EAP05.Reservas.Service.AuthService;
 
 @RestController
@@ -24,6 +25,12 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
         LoginResponseDTO response = authService.login(dto);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest dto) {
+        authService.resetPassword(dto);
+        return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
 
     @PostMapping("/logout")

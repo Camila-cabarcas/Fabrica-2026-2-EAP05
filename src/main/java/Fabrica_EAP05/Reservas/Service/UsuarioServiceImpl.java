@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,12 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Autowired
     private SupabaseAuthService supabaseAuthService;
+
+    @Autowired
+    private MailService mailService;
+
+    @Value("${app.frontend.reset-password-url}")
+    private String resetPasswordUrl;
 
     @Override
     public UsuarioRegistroResponse registrarUsuario(UsuarioRegistroRequest request, Rol rolForzado) {
@@ -60,6 +67,8 @@ public class UsuarioServiceImpl implements IUsuarioService {
             throw e;
         }
 
+        enviarEmailResetPasswordBestEffort(recargado);
+
         return new UsuarioRegistroResponse(
                 recargado.getId(),
                 recargado.getNombre(),
@@ -69,5 +78,18 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 recargado.getRol(),
                 recargado.getCreatedAt()
         );
+    }
+
+    // Best-effort: si Mailtrap falla, el registro ya se guardó y no se
+    // revierte. El usuario puede pedir reenvío del link más adelante.
+    private void enviarEmailResetPasswordBestEffort(Usuario usuario) {
+        try {
+            String token = supabaseAuthService.generarTokenRecovery(usuario.getEmail());
+            String link = resetPasswordUrl + "?token=" + token;
+            mailService.enviarEmailResetPassword(usuario.getEmail(), usuario.getNombre(), link);
+        } catch (Exception e) {
+            System.err.println("[UsuarioServiceImpl] No se pudo enviar email de reset password a "
+                    + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import Fabrica_EAP05.Reservas.Config.JwtUtil;
 import Fabrica_EAP05.Reservas.DTO.LoginDTO;
 import Fabrica_EAP05.Reservas.DTO.LoginResponseDTO;
+import Fabrica_EAP05.Reservas.DTO.ResetPasswordRequest;
 import Fabrica_EAP05.Reservas.Entities.Usuario;
 import Fabrica_EAP05.Reservas.Repository.UsuarioRepository;
 
@@ -34,6 +35,9 @@ public class AuthService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private SupabaseAuthService supabaseAuthService;
 
     @Value("${supabase.url}")
     private String supabaseUrl;
@@ -83,6 +87,14 @@ public class AuthService {
         } catch (HttpClientErrorException e) {
             throw new IllegalArgumentException("Credenciales inválidas");
         }
+    }
+
+    public void resetPassword(ResetPasswordRequest dto) {
+        usuarioRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        String accessToken = supabaseAuthService.verificarTokenRecovery(dto.getEmail(), dto.getToken());
+        supabaseAuthService.actualizarPassword(accessToken, dto.getPassword());
     }
 
     public void logout(String email, String token) {

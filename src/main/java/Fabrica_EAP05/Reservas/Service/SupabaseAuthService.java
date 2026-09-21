@@ -33,12 +33,16 @@ public class SupabaseAuthService {
     @Value("${supabase.service-role-key}")
     private String serviceRoleKey;
 
+    @Value("${supabase.anon-key}")
+    private String anonKey;
+
+    // Se crea sin password: el usuario solo puede autenticarse después de
+    // establecer una contraseña real vía el flujo de recovery (ver abajo).
     public UUID crearUsuarioAuth(String email) {
         HttpHeaders headers = headersAdmin();
 
         Map<String, Object> body = Map.of(
                 "email", email,
-                "password", UUID.randomUUID().toString(),
                 "email_confirm", true
         );
 
@@ -59,6 +63,94 @@ public class SupabaseAuthService {
                 throw new RecursoDuplicadoException("El email ya está registrado en Supabase Auth");
             }
             throw new IllegalStateException("No se pudo crear el usuario en Supabase Auth: " + e.getStatusCode(), e);
+        }
+    }
+
+    // Genera un token de recovery vía el Admin API (no envía ningún correo:
+    // Supabase solo lo genera y lo devuelve). Nosotros armamos y mandamos el
+    // email nosotros mismos con MailService/Mailtrap.
+    public String generarTokenRecovery(String email) {
+        HttpHeaders headers = headersAdmin();
+
+        Map<String, Object> body = Map.of(
+                "type", "recovery",
+                "email", email
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    supabaseUrl + "/auth/v1/admin/generate_link",
+                    HttpMethod.POST,
+                    request,
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            Object token = response.getBody().get("hashed_token");
+            if (token == null) {
+                throw new IllegalStateException("Supabase no devolvió hashed_token en generate_link");
+            }
+            return token.toString();
+        } catch (HttpClientErrorException e) {
+            throw new IllegalStateException("No se pudo generar el link de recovery: " + e.getStatusCode(), e);
+        }
+    }
+
+    // Intercambia el token de recovery por una sesión (access_token) del
+    // usuario dueño de ese email. Si el token es inválido/expirado/ya usado,
+    // Supabase responde 4xx y lo traducimos a IllegalArgumentException.
+    public String verificarTokenRecovery(String email, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("apikey", anonKey);
+
+        Map<String, Object> body = Map.of(
+                "type", "recovery",
+                "token", token,
+                "email", email
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    supabaseUrl + "/auth/v1/verify",
+                    HttpMethod.POST,
+                    request,
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            Object accessToken = response.getBody().get("access_token");
+            if (accessToken == null) {
+                throw new IllegalArgumentException("Token de recuperación inválido o expirado");
+            }
+            return accessToken.toString();
+        } catch (HttpClientErrorException e) {
+            throw new IllegalArgumentException("Token de recuperación inválido o expirado");
+        }
+    }
+
+    // Requiere el access_token de la sesión obtenida en verificarTokenRecovery
+    // (representa al usuario, no al admin) para cambiar su propia password.
+    public void actualizarPassword(String accessToken, String nuevaPassword) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("apikey", anonKey);
+        headers.setBearerAuth(accessToken);
+
+        Map<String, Object> body = Map.of("password", nuevaPassword);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            restTemplate.exchange(
+                    supabaseUrl + "/auth/v1/user",
+                    HttpMethod.PUT,
+                    request,
+                    Void.class
+            );
+        } catch (HttpClientErrorException e) {
+            throw new IllegalStateException("No se pudo actualizar la contraseña: " + e.getStatusCode(), e);
         }
     }
 
