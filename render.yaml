@@ -12,7 +12,7 @@ services:
       - key: SPRING_DATASOURCE_PASSWORD
         sync: false
       - key: SPRING_JPA_HIBERNATE_DDL_AUTO
-        value: update
+        value: validate
       - key: APP_JWT_SECRET
         sync: false
       - key: SUPABASE_URL
