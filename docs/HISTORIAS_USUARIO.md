@@ -1,7 +1,7 @@
 ﻿# Historias de Usuario Implementadas - Sprint-1
 
 ## HU-01: Registrar Nuevo Usuario
-**Estado:** ✅ COMPLETADA
+**Estado:**  COMPLETADA
 
 Endpoint: POST /api/usuario/registrar
 - Usuario ingresa email, nombre, teléfono, dirección
@@ -25,7 +25,7 @@ Endpoint: POST /api/auth/login
 - **Planificado:** Sprint-2 cuando Mailtrap esté configurado
 
 ## HU-03: Cerrar Sesión (Logout)
-**Estado:** ✅ COMPLETADA
+**Estado:**  COMPLETADA
 
 Endpoint: POST /api/auth/logout
 - Usuario autenticado cierra sesión
@@ -33,7 +33,7 @@ Endpoint: POST /api/auth/logout
 - Retorna 200 OK
 
 ## HU-04: Resetear Contraseña
-**Estado:** ⚠️ IMPLEMENTADA (limitación)
+**Estado:**  IMPLEMENTADA (limitación)
 
 Endpoint: POST /api/auth/reset-password
 - Usuario recibe email con token
@@ -45,7 +45,7 @@ Endpoint: POST /api/auth/reset-password
 
 | HU | Feature | Estado | Completitud | Próximo Sprint |
 |---|---|---|---|---|
-| HU-01 | Registro | ✅ Completa | 100% | - |
-| HU-02 | Login | ⏳ Parcial | 90% | Testing E2E + password |
-| HU-03 | Logout | ✅ Completa | 100% | - |
-| HU-04 | Reset Password | ⏳ Parcial | 80% | Configurar Mailtrap |
+| HU-01 | Registro |  Completa | 100% | - |
+| HU-02 | Login |  Parcial | 90% | Testing E2E + password |
+| HU-03 | Logout |  Completa | 100% | - |
+| HU-04 | Reset Password |  Parcial | 80% | Configurar Mailtrap |
