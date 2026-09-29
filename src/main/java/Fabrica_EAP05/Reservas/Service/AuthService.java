@@ -45,10 +45,24 @@ public class AuthService {
     @Value("${supabase.anon-key}")
     private String supabaseAnonKey;
 
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     public LoginResponseDTO login(LoginDTO dto) {
 
+        // 0. Verificar si el usuario está bloqueado ANTES de gastar una llamada a Supabase
+        loginAttemptService.verificarBloqueo(dto.getEmail());
+
         // 1. Validar credenciales contra Supabase Auth
-        validarCredencialesSupabase(dto.getEmail(), dto.getContrasena());
+        try {
+            validarCredencialesSupabase(dto.getEmail(), dto.getContrasena());
+        } catch (IllegalArgumentException e) {
+            loginAttemptService.registrarFallo(dto.getEmail());
+            throw e;
+        }
+
+        // Login exitoso: resetear contador
+        loginAttemptService.registrarExito(dto.getEmail());
 
         // 2. Buscar perfil local por email
         Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
