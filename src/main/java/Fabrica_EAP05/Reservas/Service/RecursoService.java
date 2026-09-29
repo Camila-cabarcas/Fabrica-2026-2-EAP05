@@ -36,16 +36,10 @@ public class RecursoService{
         recurso.setNombre(request.getNombre());
         recurso.setDescripcion(request.getDescripcion());
         recurso.setActivo(true);
-        Recurso recargado;
-        try {
-            Recurso guardado = recursoRepository.saveAndFlush(recurso);
-            entityManager.detach(guardado);
-
-            recargado = recursoRepository.findById(guardado.getId())
-                    .orElseThrow(() -> new IllegalStateException("No se pudo recuperar el recurso recién creado"));
-        } catch (RuntimeException e) {
-            throw e;
-        }
+        Recurso guardado = recursoRepository.saveAndFlush(recurso);
+        entityManager.detach(guardado);
+        Recurso recargado = recursoRepository.findById(guardado.getId())
+            .orElseThrow(() -> new IllegalStateException("No se pudo recuperar el recurso recién creado"));
         return new RegistroRecursoResponse(
                 recargado.getId(),
                 recargado.getNombre(),

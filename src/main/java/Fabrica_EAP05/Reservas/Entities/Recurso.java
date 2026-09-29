@@ -25,7 +25,7 @@ public class Recurso {
     private String descripcion;
 
 
-    private boolean activo = false;
+    private Boolean activo = false;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
