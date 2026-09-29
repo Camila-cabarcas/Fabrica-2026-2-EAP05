@@ -5,10 +5,13 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import tools.jackson.databind.ObjectMapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,7 +27,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableMethodSecurity
@@ -32,7 +38,8 @@ public class SecurityConfig {
 
     @Autowired
     private JwtFilter jwtFilter;
-
+    
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -86,7 +93,26 @@ public class SecurityConfig {
             // TEMPORAL: quitar una vez identificada la causa del 403 en Render.
             // Corre después de JwtFilter para mostrar exactamente lo que va a
             // evaluar el AuthorizationFilter (authorizeHttpRequests) al final de la cadena.
-            .addFilterAfter(new RequestLoggingFilter(), JwtFilter.class);
+            .addFilterAfter(new RequestLoggingFilter(), JwtFilter.class)
+            .exceptionHandling(exceptions -> exceptions
+                // Sin token válido / no autenticado -> 401 con mensaje claro
+                .authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(401);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                Map<String, Object> body = new HashMap<>();
+                body.put("timestamp", OffsetDateTime.now().toString());
+                body.put("mensaje", "No autenticado: debes iniciar sesion para acceder a este recurso");
+                response.getWriter().write(objectMapper.writeValueAsString(body));
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.setStatus(403);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                Map<String, Object> body = new HashMap<>();
+                body.put("timestamp", OffsetDateTime.now().toString());
+                body.put("mensaje", "No tienes permiso para acceder a este recurso");
+                response.getWriter().write(objectMapper.writeValueAsString(body));
+            }));
+            
         return http.build();
     }
 
