@@ -1,17 +1,22 @@
 package Fabrica_EAP05.Reservas.Controller;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import Fabrica_EAP05.Reservas.DTO.ModificarServicioRequest;
+import Fabrica_EAP05.Reservas.DTO.ModificarServicioResponse;
 import Fabrica_EAP05.Reservas.DTO.RegistrarServicioRequest;
 import Fabrica_EAP05.Reservas.DTO.RegistrarServicioResponse;
 import Fabrica_EAP05.Reservas.Exception.RecursoDuplicadoException;
@@ -52,6 +57,29 @@ public class ServicioController {
             RegistrarServicioResponse response = servicioService.registrarServicio(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RecursoDuplicadoException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{servicioId}")
+    @PreAuthorize("hasRole('administrador')")
+    public ResponseEntity<?> modificarServicio(@PathVariable UUID servicioId,
+                                               @Valid @RequestBody ModificarServicioRequest request) {
+        try {
+            ModificarServicioResponse response = servicioService.modificarServicio(servicioId, request);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException | RecursoDuplicadoException e) {
+            // Servicio con reservas asociadas o nombre duplicado
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
