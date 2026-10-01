@@ -7,12 +7,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import Fabrica_EAP05.Reservas.DTO.LoginResponseDTO;
+
 import Fabrica_EAP05.Reservas.DTO.RegistrarRecursoRequest;
 import Fabrica_EAP05.Reservas.DTO.RegistroRecursoResponse;
-import Fabrica_EAP05.Reservas.DTO.UsuarioRegistroRequest;
-import Fabrica_EAP05.Reservas.DTO.UsuarioRegistroResponse;
-import Fabrica_EAP05.Reservas.Entities.Rol;
+
+
+
 import Fabrica_EAP05.Reservas.Service.RecursoService;
 import jakarta.validation.Valid;
 

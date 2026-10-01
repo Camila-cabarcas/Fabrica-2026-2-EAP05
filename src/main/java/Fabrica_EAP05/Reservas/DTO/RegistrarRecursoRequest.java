@@ -1,7 +1,7 @@
 package Fabrica_EAP05.Reservas.DTO;
 
 
-import jakarta.persistence.Column;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;

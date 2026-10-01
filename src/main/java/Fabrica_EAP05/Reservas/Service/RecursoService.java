@@ -7,14 +7,14 @@ import org.springframework.stereotype.Service;
 
 import Fabrica_EAP05.Reservas.DTO.RegistrarRecursoRequest;
 import Fabrica_EAP05.Reservas.DTO.RegistroRecursoResponse;
-import Fabrica_EAP05.Reservas.DTO.UsuarioRegistroRequest;
-import Fabrica_EAP05.Reservas.DTO.UsuarioRegistroResponse;
+
+
 
 import Fabrica_EAP05.Reservas.Entities.Recurso;
 import Fabrica_EAP05.Reservas.Exception.RecursoDuplicadoException;
 import Fabrica_EAP05.Reservas.Repository.RecursoRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Id;
+
 
 @Service 
 public class RecursoService{
