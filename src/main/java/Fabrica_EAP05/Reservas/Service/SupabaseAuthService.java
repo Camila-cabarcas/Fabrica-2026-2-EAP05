@@ -36,35 +36,39 @@ public class SupabaseAuthService {
     @Value("${supabase.anon-key}")
     private String anonKey;
 
-    // Se crea sin password: el usuario solo puede autenticarse después de
-    // establecer una contraseña real vía el flujo de recovery (ver abajo).
-    public UUID crearUsuarioAuth(String email) {
-        HttpHeaders headers = headersAdmin();
+    public UUID crearUsuarioAuth(String email, String password) {
+    HttpHeaders headers = headersAdmin();
 
-        Map<String, Object> body = Map.of(
-                "email", email,
-                "email_confirm", true
+    Map<String, Object> body = Map.of(
+            "email", email,
+            "password", password,
+            "email_confirm", true
+    );
+
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+    try {
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                supabaseUrl + "/auth/v1/admin/users",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
         );
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    supabaseUrl + "/auth/v1/admin/users",
-                    HttpMethod.POST,
-                    request,
-                    new ParameterizedTypeReference<Map<String, Object>>() {}
-            );
-
-            String id = (String) response.getBody().get("id");
-            return UUID.fromString(id);
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().value() == 422 || e.getStatusCode().value() == 400) {
-                throw new RecursoDuplicadoException("El email ya está registrado en Supabase Auth");
-            }
-            throw new IllegalStateException("No se pudo crear el usuario en Supabase Auth: " + e.getStatusCode(), e);
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null || responseBody.get("id") == null) {
+            throw new IllegalStateException("Supabase no devolvió un id de usuario al crear en Auth");
         }
+
+        String id = (String) responseBody.get("id");
+        return UUID.fromString(id);
+    } catch (HttpClientErrorException e) {
+        if (e.getStatusCode().value() == 422 || e.getStatusCode().value() == 400) {
+            throw new RecursoDuplicadoException("El email ya está registrado en Supabase Auth");
+        }
+        throw new IllegalStateException("No se pudo crear el usuario en Supabase Auth: " + e.getStatusCode(), e);
     }
+}
 
     // Genera un token de recovery vía el Admin API (no envía ningún correo:
     // Supabase solo lo genera y lo devuelve). Nosotros armamos y mandamos el
