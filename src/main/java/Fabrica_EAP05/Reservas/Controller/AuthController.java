@@ -16,6 +16,7 @@ import Fabrica_EAP05.Reservas.Service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
@@ -34,6 +35,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Credenciales inválidas o usuario inactivo"),
             @ApiResponse(responseCode = "429", description = "Cuenta bloqueada temporalmente por intentos fallidos")
     })
+    @SecurityRequirements()
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
         LoginResponseDTO response = authService.login(dto);
@@ -47,6 +49,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "401", description = "Token de recuperación inválido o expirado")
     })
+    @SecurityRequirements()
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest dto) {
         authService.resetPassword(dto);

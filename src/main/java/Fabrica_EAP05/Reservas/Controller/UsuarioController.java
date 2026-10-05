@@ -14,6 +14,7 @@ import Fabrica_EAP05.Reservas.Service.IUsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
@@ -31,6 +32,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "409", description = "El email ya está registrado")
     })
+    @SecurityRequirements()
     @PostMapping("/registrar")
     public ResponseEntity<UsuarioRegistroResponse> registrarCliente(@Valid @RequestBody UsuarioRegistroRequest request) {
         UsuarioRegistroResponse response = usuarioService.registrarUsuario(request, Rol.cliente);
