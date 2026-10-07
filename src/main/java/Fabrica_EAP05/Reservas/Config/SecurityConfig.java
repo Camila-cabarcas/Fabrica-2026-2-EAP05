@@ -80,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                 .anyRequest().authenticated()
             )
 
@@ -93,7 +94,6 @@ public class SecurityConfig {
             // TEMPORAL: quitar una vez identificada la causa del 403 en Render.
             // Corre después de JwtFilter para mostrar exactamente lo que va a
             // evaluar el AuthorizationFilter (authorizeHttpRequests) al final de la cadena.
-            .addFilterAfter(new RequestLoggingFilter(), JwtFilter.class)
             .exceptionHandling(exceptions -> exceptions
                 // Sin token válido / no autenticado -> 401 con mensaje claro
                 .authenticationEntryPoint((request, response, authException) -> {
@@ -116,24 +116,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // TEMPORAL: filtro de diagnóstico. No loguea el valor de Authorization
-    // (solo si está presente) para no exponer JWTs en los logs de Render.
-    private static class RequestLoggingFilter extends OncePerRequestFilter {
-        @Override
-        protected void doFilterInternal(HttpServletRequest request,
-                                         HttpServletResponse response,
-                                         FilterChain filterChain) throws ServletException, IOException {
-            Authentication authAntes = SecurityContextHolder.getContext().getAuthentication();
-            System.out.println("[SECURITY-DEBUG] >>> " + request.getMethod() + " " + request.getRequestURI()
-                    + " | Content-Length=" + request.getContentLength()
-                    + " | Content-Type=" + request.getContentType()
-                    + " | Authorization=" + (request.getHeader("Authorization") != null ? "presente" : "ausente")
-                    + " | authAntesDeAuthorizationFilter=" + (authAntes != null ? authAntes.getClass().getSimpleName() + "/" + authAntes.isAuthenticated() : "null"));
-
-            filterChain.doFilter(request, response);
-
-            System.out.println("[SECURITY-DEBUG] <<< " + request.getMethod() + " " + request.getRequestURI()
-                    + " -> status=" + response.getStatus());
-        }
-    }
 }
