@@ -2,6 +2,10 @@ package Fabrica_EAP05.Reservas.Controller;
 
 
 import jakarta.validation.Valid;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import Fabrica_EAP05.Reservas.DTO.ForgotPasswordRequest;
 import Fabrica_EAP05.Reservas.DTO.LoginDTO;
 import Fabrica_EAP05.Reservas.DTO.LoginResponseDTO;
 import Fabrica_EAP05.Reservas.DTO.ResetPasswordRequest;
@@ -42,6 +47,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest dto) {
+        authService.solicitarRecuperacion(dto.getEmail());
+        Map<String, String> body = new HashMap<>();
+        body.put("mensaje", "Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.");
+        return ResponseEntity.ok(body);
+    }
+
     @Operation(summary = "Restablecer contraseña",
             description = "Cambia la contraseña usando el token de recuperación enviado por correo.")
     @ApiResponses({
@@ -63,8 +76,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "No hay sesión activa")
     })
     @PostMapping("/logout")
-public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
     if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No hay sesión activa");

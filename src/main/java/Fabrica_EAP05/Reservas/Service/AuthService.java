@@ -39,14 +39,20 @@ public class AuthService {
     @Autowired
     private SupabaseAuthService supabaseAuthService;
 
+     @Autowired
+    private MailService mailService;
+
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     @Value("${supabase.url}")
     private String supabaseUrl;
 
     @Value("${supabase.anon-key}")
     private String supabaseAnonKey;
 
-    @Autowired
-    private LoginAttemptService loginAttemptService;
+    @Value("${app.frontend.reset-password-url}")
+    private String resetPasswordUrl;
 
     public LoginResponseDTO login(LoginDTO dto) {
 
@@ -99,16 +105,24 @@ public class AuthService {
                     String.class
             );
         } catch (HttpClientErrorException e) {
-    System.err.println("Supabase respondió: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
     throw new IllegalArgumentException("Credenciales inválidas");
 }
     }
 
+   public void solicitarRecuperacion(String email) {
+    usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+        try {
+            String token = supabaseAuthService.generarTokenRecovery(email);
+            mailService.enviarEmailResetPassword(email, usuario.getNombre(), token);
+        } catch (Exception e) {
+            System.err.println("[AuthService] No se pudo enviar email de recuperación a "
+                    + email + ": " + e.getMessage());
+        }
+    });
+}
+    
     public void resetPassword(ResetPasswordRequest dto) {
-        usuarioRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        String accessToken = supabaseAuthService.verificarTokenRecovery(dto.getEmail(), dto.getToken());
+        String accessToken = supabaseAuthService.verificarTokenRecovery(dto.getToken());
         supabaseAuthService.actualizarPassword(accessToken, dto.getPassword());
     }
 

@@ -104,36 +104,40 @@ public class SupabaseAuthService {
     // Intercambia el token de recovery por una sesión (access_token) del
     // usuario dueño de ese email. Si el token es inválido/expirado/ya usado,
     // Supabase responde 4xx y lo traducimos a IllegalArgumentException.
-    public String verificarTokenRecovery(String email, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("apikey", anonKey);
+    public String verificarTokenRecovery(String token) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("apikey", anonKey);
 
-        Map<String, Object> body = Map.of(
-                "type", "recovery",
-                "token", token,
-                "email", email
+    Map<String, Object> body = Map.of(
+        "type", "recovery",
+        "token_hash", token.trim()
         );
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    supabaseUrl + "/auth/v1/verify",
-                    HttpMethod.POST,
-                    request,
-                    new ParameterizedTypeReference<Map<String, Object>>() {}
-            );
+    try {
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                supabaseUrl + "/auth/v1/verify",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
 
-            Object accessToken = response.getBody().get("access_token");
-            if (accessToken == null) {
-                throw new IllegalArgumentException("Token de recuperación inválido o expirado");
-            }
-            return accessToken.toString();
-        } catch (HttpClientErrorException e) {
-            throw new IllegalArgumentException("Token de recuperación inválido o expirado");
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
         }
-    }
+
+        Object accessToken = responseBody.get("access_token");
+        if (accessToken == null) {
+            throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
+        }
+        return accessToken.toString();
+    } catch (HttpClientErrorException e) {
+        throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
+}
+}
 
     // Requiere el access_token de la sesión obtenida en verificarTokenRecovery
     // (representa al usuario, no al admin) para cambiar su propia password.
