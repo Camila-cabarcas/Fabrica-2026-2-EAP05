@@ -36,13 +36,12 @@ public class SupabaseAuthService {
     @Value("${supabase.anon-key}")
     private String anonKey;
 
-    // Se crea sin password: el usuario solo puede autenticarse después de
-    // establecer una contraseña real vía el flujo de recovery (ver abajo).
-    public UUID crearUsuarioAuth(String email) {
+    public UUID crearUsuarioAuth(String email, String password) {
     HttpHeaders headers = headersAdmin();
 
     Map<String, Object> body = Map.of(
             "email", email,
+            "password", password,
             "email_confirm", true
     );
 
@@ -69,7 +68,7 @@ public class SupabaseAuthService {
         }
         throw new IllegalStateException("No se pudo crear el usuario en Supabase Auth: " + e.getStatusCode(), e);
     }
-    }
+}
 
     // Genera un token de recovery vía el Admin API (no envía ningún correo:
     // Supabase solo lo genera y lo devuelve). Nosotros armamos y mandamos el
@@ -116,10 +115,9 @@ public class SupabaseAuthService {
     headers.set("apikey", anonKey);
 
     Map<String, Object> body = Map.of(
-            "type", "recovery",
-            "token", token,
-            "email", email
-    );
+        "type", "recovery",
+        "token_hash", token.trim()
+        );
 
     HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
