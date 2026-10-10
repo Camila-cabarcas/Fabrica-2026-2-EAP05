@@ -74,32 +74,37 @@ public class SupabaseAuthService {
     // Supabase solo lo genera y lo devuelve). Nosotros armamos y mandamos el
     // email nosotros mismos con MailService/Mailtrap.
     public String generarTokenRecovery(String email) {
-        HttpHeaders headers = headersAdmin();
+    HttpHeaders headers = headersAdmin();
 
-        Map<String, Object> body = Map.of(
-                "type", "recovery",
-                "email", email
+    Map<String, Object> body = Map.of(
+            "type", "recovery",
+            "email", email
+    );
+
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+    try {
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                supabaseUrl + "/auth/v1/admin/generate_link",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
         );
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    supabaseUrl + "/auth/v1/admin/generate_link",
-                    HttpMethod.POST,
-                    request,
-                    new ParameterizedTypeReference<Map<String, Object>>() {}
-            );
-
-            Object token = response.getBody().get("hashed_token");
-            if (token == null) {
-                throw new IllegalStateException("Supabase no devolvió hashed_token en generate_link");
-            }
-            return token.toString();
-        } catch (HttpClientErrorException e) {
-            throw new IllegalStateException("No se pudo generar el link de recovery: " + e.getStatusCode(), e);
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new IllegalStateException("Supabase no devolvió body en generate_link");
         }
+
+        Object token = responseBody.get("hashed_token");
+        if (token == null) {
+            throw new IllegalStateException("Supabase no devolvió hashed_token en generate_link");
+        }
+        return token.toString();
+    } catch (HttpClientErrorException e) {
+        throw new IllegalStateException("No se pudo generar el link de recovery: " + e.getStatusCode(), e);
     }
+    }   
 
     // Intercambia el token de recovery por una sesión (access_token) del
     // usuario dueño de ese email. Si el token es inválido/expirado/ya usado,
@@ -126,18 +131,18 @@ public class SupabaseAuthService {
 
         Map<String, Object> responseBody = response.getBody();
         if (responseBody == null) {
-            throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
+            throw new IllegalArgumentException("Token de recuperación inválido o expirado");
         }
 
         Object accessToken = responseBody.get("access_token");
         if (accessToken == null) {
-            throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
+            throw new IllegalArgumentException("Token de recuperación inválido o expirado");
         }
         return accessToken.toString();
     } catch (HttpClientErrorException e) {
-        throw new IllegalArgumentException("El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.");
-}
-}
+        throw new IllegalArgumentException("Token de recuperación inválido o expirado");
+    }
+    }
 
     // Requiere el access_token de la sesión obtenida en verificarTokenRecovery
     // (representa al usuario, no al admin) para cambiar su propia password.
