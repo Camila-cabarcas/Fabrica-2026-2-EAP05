@@ -109,7 +109,7 @@ public class SupabaseAuthService {
     // Intercambia el token de recovery por una sesión (access_token) del
     // usuario dueño de ese email. Si el token es inválido/expirado/ya usado,
     // Supabase responde 4xx y lo traducimos a IllegalArgumentException.
-    public String verificarTokenRecovery(String email, String token) {
+    public String verificarTokenRecovery(String token) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     headers.set("apikey", anonKey);
