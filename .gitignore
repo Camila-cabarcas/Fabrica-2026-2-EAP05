@@ -26,3 +26,4 @@ replay_pid*
 target/
 src/main/resources(1)/application.properties
 .env
+application-local.properties
