@@ -21,12 +21,17 @@ import Fabrica_EAP05.Reservas.DTO.RegistrarServicioRequest;
 import Fabrica_EAP05.Reservas.DTO.RegistrarServicioResponse;
 import Fabrica_EAP05.Reservas.Exception.RecursoDuplicadoException;
 import Fabrica_EAP05.Reservas.Service.ServicioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 
 @RestController
 @RequestMapping("/api/servicios")
+@Tag(name = "Servicios", description = "Registro y modificación de servicios. Solo administradores.")
 public class ServicioController {
 
     @Autowired
@@ -38,6 +43,15 @@ public class ServicioController {
         private UUID recursoId;
     }
 
+    @Operation(summary = "Validar recurso",
+            description = "Verifica que un recurso exista y esté activo antes de asociarlo a un servicio. "
+                    + "Un recursoId nulo se considera válido (servicio sin recurso).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "El recurso es válido y está activo"),
+            @ApiResponse(responseCode = "400", description = "El recurso no existe o no está activo"),
+            @ApiResponse(responseCode = "401", description = "Sin autenticación"),
+            @ApiResponse(responseCode = "403", description = "Sin permiso (requiere rol administrador)")
+    })
     @PostMapping("/validar-recurso")
     @PreAuthorize("hasRole('administrador')")
     public ResponseEntity<?> validarRecurso(@RequestBody ValidarRecursoRequest request) {
@@ -50,6 +64,15 @@ public class ServicioController {
         }
     }
 
+    @Operation(summary = "Registrar servicio",
+            description = "Crea un servicio, opcionalmente asociado a un recurso activo.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Servicio registrado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o recurso inexistente/inactivo"),
+            @ApiResponse(responseCode = "401", description = "Sin autenticación"),
+            @ApiResponse(responseCode = "403", description = "Sin permiso (requiere rol administrador)"),
+            @ApiResponse(responseCode = "409", description = "Ya existe un servicio con ese nombre")
+    })
     @PostMapping("/registrar")
     @PreAuthorize("hasRole('administrador')")
     public ResponseEntity<?> registrarServicio(@Valid @RequestBody RegistrarServicioRequest request) {
@@ -68,6 +91,17 @@ public class ServicioController {
         }
     }
 
+    @Operation(summary = "Modificar servicio",
+            description = "Actualización parcial: solo se cambian los campos enviados. "
+                    + "No se permite si el servicio tiene reservas asociadas.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Servicio modificado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o recurso inexistente/inactivo"),
+            @ApiResponse(responseCode = "401", description = "Sin autenticación"),
+            @ApiResponse(responseCode = "403", description = "Sin permiso (requiere rol administrador)"),
+            @ApiResponse(responseCode = "404", description = "El servicio no existe"),
+            @ApiResponse(responseCode = "409", description = "El servicio tiene reservas asociadas o el nombre ya existe")
+    })
     @PutMapping("/{servicioId}")
     @PreAuthorize("hasRole('administrador')")
     public ResponseEntity<?> modificarServicio(@PathVariable UUID servicioId,
