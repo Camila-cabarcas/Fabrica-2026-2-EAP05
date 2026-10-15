@@ -1,5 +1,6 @@
 package Fabrica_EAP05.Reservas.Controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,14 @@ public class AgendaController {
         try {
             String email = authentication.getName();
             List<AgendaResponse> agenda = agendaService.consultarAgendaProveedor(email);
+
+            if (agenda.isEmpty()) {
+                return ResponseEntity.ok(Collections.singletonMap("mensaje", "No existen reservas programadas."));
+            }
+
             return ResponseEntity.ok(agenda);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 }
