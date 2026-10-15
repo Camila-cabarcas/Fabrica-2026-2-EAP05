@@ -83,6 +83,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                    // Dentro de SecurityConfig / HttpSecurity:
+                    .requestMatchers(HttpMethod.POST, "/api/horarios/**").hasAnyAuthority("proveedor")
                     // RESTRICCIÓN ESPECÍFICA DE ROL:
                     .requestMatchers(HttpMethod.POST, "/api/proveedor-servicio/asignar").hasAnyRole("administrador", "ADMIN")
                     .requestMatchers("/error").permitAll()

@@ -23,7 +23,7 @@ public class HorarioController {
     private HorarioService horarioService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PROVEEDOR') or hasAuthority('proveedor') or hasRole('PROVEEDOR')")
+    @PreAuthorize("hasAuthority('proveedor') or hasRole('proveedor')")
     public ResponseEntity<?> registrarHorario(@Valid @RequestBody HorarioRequest request) {
         try {
             Horario nuevoHorario = horarioService.registrarHorario(request);
