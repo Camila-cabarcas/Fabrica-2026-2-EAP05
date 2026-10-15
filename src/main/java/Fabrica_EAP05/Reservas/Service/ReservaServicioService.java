@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import Fabrica_EAP05.Reservas.DTO.CancelarReservaResponse;
 import Fabrica_EAP05.Reservas.DTO.CrearReservaRequest;
 import Fabrica_EAP05.Reservas.DTO.CrearReservaResponse;
 import Fabrica_EAP05.Reservas.Entities.Horario;
@@ -133,4 +134,31 @@ public class ReservaServicioService {
     private OffsetDateTime aOffset(LocalDateTime fecha) {
         return fecha != null ? fecha.atZone(ZoneId.systemDefault()).toOffsetDateTime() : null;
     }
+    @Transactional
+    public CancelarReservaResponse cancelarReserva(String email, UUID reservaId) {
+    Usuario cliente = usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("Usuario autenticado no encontrado"));
+    if (!Boolean.TRUE.equals(cliente.getActivo())) {
+        throw new IllegalArgumentException("El usuario no está activo");
+    }
+
+    // Mismo mensaje si no existe o es de otro cliente: no se revela cuál de las dos
+    ReservaServicio reserva = reservaServicioRepository.findByIdParaActualizar(reservaId)
+            .filter(r -> r.getClienteId().equals(cliente.getId()))
+            .orElseThrow(() -> new IllegalArgumentException("La reserva no existe"));
+
+    if (reserva.getEstado() != EstadoReserva.confirmada) {
+        throw new IllegalStateException("La reserva no está confirmada, no se puede cancelar");
+    }
+
+    // El plazo de 12 horas, cancelada_en y la liberación del horario los resuelven los triggers
+    reserva.setEstado(EstadoReserva.cancelada);
+    reservaServicioRepository.saveAndFlush(reserva);   // si el trigger rechaza, falla aquí
+    entityManager.refresh(reserva);                    // lee cancelada_en que puso el trigger
+
+    return new CancelarReservaResponse(
+            reserva.getId(),
+            reserva.getEstado().name(),
+            aOffset(reserva.getCanceladaEn()));
+}
 }
