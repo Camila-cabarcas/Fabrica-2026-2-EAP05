@@ -63,6 +63,28 @@ public class GlobalExceptionHandler {
         body.put("mensaje", ex.getMessage());
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
     }
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> handleRecursoNoEncontrado(RecursoNoEncontradoException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", OffsetDateTime.now());
+        body.put("mensaje", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(RecursoComprometidoException.class)
+    public ResponseEntity<Map<String, Object>> handleRecursoComprometido(RecursoComprometidoException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", OffsetDateTime.now());
+        body.put("mensaje", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+    @ExceptionHandler(ConflictoDisponibilidadException.class)
+    public ResponseEntity<Map<String, Object>> handleConflictoDisponibilidad(ConflictoDisponibilidadException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", OffsetDateTime.now());
+        body.put("mensaje", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
     @ExceptionHandler(org.springframework.dao.DataAccessException.class)
 public ResponseEntity<Map<String, Object>> handleDataAccess(org.springframework.dao.DataAccessException ex) {
     String causa = String.valueOf(ex.getMostSpecificCause().getMessage());
