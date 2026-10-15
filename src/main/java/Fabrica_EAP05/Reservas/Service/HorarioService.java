@@ -1,7 +1,6 @@
 package Fabrica_EAP05.Reservas.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Service;
 import Fabrica_EAP05.Reservas.DTO.HorarioRequest;
 import Fabrica_EAP05.Reservas.Entities.Horario;
 import Fabrica_EAP05.Reservas.Entities.Usuario;
+import Fabrica_EAP05.Reservas.Entities.Rol;
 import Fabrica_EAP05.Reservas.Enums.EstadoHorario;
 import Fabrica_EAP05.Reservas.Repository.HorarioRepository;
 import Fabrica_EAP05.Reservas.Repository.ProveedorServicioRepository;
@@ -37,7 +37,8 @@ public class HorarioService {
         Usuario proveedor = usuarioRepository.findById(request.getProveedorId())
                 .orElseThrow(() -> new IllegalArgumentException("El proveedor especificado no existe."));
 
-        if (!"proveedor".equalsIgnoreCase(proveedor.getRol()) && !"PROVEEDOR".equalsIgnoreCase(proveedor.getRol())) {
+// Como Rol es un Enum, comparamos directamente con Rol.proveedor o usamos .name()
+        if (proveedor.getRol() == null || proveedor.getRol() != Rol.proveedor) {
             throw new IllegalArgumentException("El usuario especificado no tiene rol de proveedor.");
         }
 
@@ -47,7 +48,7 @@ public class HorarioService {
             throw new IllegalArgumentException("El proveedor debe estar asociado a al menos un servicio para registrar un horario.");
         }
 
-        // 4. Criterio de Aceptación: Validar solapamientos (Scenario 2)
+        // 4. Criterio de Aceptación: Validar solapamientos
         List<Horario> solapados = horarioRepository.findSolapados(
                 request.getProveedorId(),
                 request.getInicio(),
@@ -62,7 +63,7 @@ public class HorarioService {
 
         // 5. Crear y guardar el registro
         Horario nuevoHorario = new Horario();
-        nuevoHorario.setId(UUID.randomUUID());
+        nuevoHorario.setId(java.util.UUID.randomUUID());
         nuevoHorario.setProveedorId(request.getProveedorId());
         nuevoHorario.setInicio(request.getInicio());
         nuevoHorario.setFin(request.getFin());
