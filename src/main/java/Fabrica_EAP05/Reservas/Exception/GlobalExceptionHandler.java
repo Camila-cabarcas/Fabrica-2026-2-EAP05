@@ -9,10 +9,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", OffsetDateTime.now());
+        body.put("mensaje", "El valor de '" + ex.getName() + "' no tiene un formato válido");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+    
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -75,4 +85,21 @@ public class GlobalExceptionHandler {
         body.put("mensaje", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+public ResponseEntity<Map<String, Object>> handleDataAccess(org.springframework.dao.DataAccessException ex) {
+    String causa = String.valueOf(ex.getMostSpecificCause().getMessage());
+    Map<String, Object> body = new HashMap<>();
+    body.put("timestamp", OffsetDateTime.now());
+
+    if (causa.contains("faltan menos de 12 horas")) {
+        body.put("mensaje", "No se puede cancelar: faltan menos de 12 horas para el inicio de la reserva");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+    if (causa.contains("uq_horario_confirmado")) {
+        body.put("mensaje", "El horario ya fue reservado por otro cliente");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+    body.put("mensaje", "Error interno del servidor");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+}
 }

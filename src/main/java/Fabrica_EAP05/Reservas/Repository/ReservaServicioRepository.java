@@ -45,5 +45,16 @@ public interface ReservaServicioRepository extends JpaRepository<ReservaServicio
 
     default long contarReservasVigentesDeRecurso(UUID recursoId, LocalDateTime ahora) {
         return contarReservasPendientesDeRecurso(recursoId, EstadoReserva.confirmada, ahora);
+                + "WHERE r.horarioId = h.id "
+                + "AND r.recursoId = :recursoId "
+                + "AND r.estado = :estado "
+                + "AND h.inicio < :fin AND h.fin > :inicio")
+        long contarReservasEnRango(@Param("recursoId") UUID recursoId,
+                                @Param("estado") EstadoReserva estado,
+                                @Param("inicio") LocalDateTime inicio,
+                                @Param("fin") LocalDateTime fin);
+
+        default long contarReservasDeRecursoEnRango(UUID recursoId, LocalDateTime inicio, LocalDateTime fin) {
+        return contarReservasEnRango(recursoId, EstadoReserva.confirmada, inicio, fin);
         }
 }
