@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 public class HorarioRequest {
 
-    @NotNull(message = "El ID del proveedor es obligatorio")
+
     private UUID proveedorId;
 
     @NotNull(message = "La fecha y hora de inicio es obligatoria")
