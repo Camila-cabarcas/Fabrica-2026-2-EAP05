@@ -17,4 +17,13 @@ public interface HorarioRepository extends JpaRepository<Horario, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT h FROM Horario h WHERE h.id = :id")
     Optional<Horario> findByIdParaActualizar(@Param("id") UUID id);
+
+    // Método nuevo para la HU09 (Validación de solapamiento al crear horario)
+    @Query("SELECT h FROM Horario h WHERE h.proveedorId = :proveedorId " +
+            "AND (:inicio < h.fin AND :fin > h.inicio)")
+    List<Horario> findSolapados(
+            @Param("proveedorId") UUID proveedorId,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fin") LocalDateTime fin
+    );
 }
