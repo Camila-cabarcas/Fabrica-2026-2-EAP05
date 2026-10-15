@@ -1,7 +1,5 @@
 package Fabrica_EAP05.Reservas.Controller;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import Fabrica_EAP05.Reservas.DTO.HorarioRequest;
 import Fabrica_EAP05.Reservas.DTO.HorarioResponse;
 import Fabrica_EAP05.Reservas.Entities.Horario;
+import Fabrica_EAP05.Reservas.Entities.Usuario;
+import Fabrica_EAP05.Reservas.Repository.UsuarioRepository;
 import Fabrica_EAP05.Reservas.Service.HorarioService;
 import jakarta.validation.Valid;
 
@@ -25,15 +25,24 @@ public class HorarioController {
     @Autowired
     private HorarioService horarioService;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     @PostMapping
     @PreAuthorize("hasAnyRole('proveedor', 'PROVEEDOR')")
     public ResponseEntity<?> registrarHorario(@Valid @RequestBody HorarioRequest request, Authentication authentication) {
         try {
-            // Asignamos el ID del proveedor autenticado desde el token directamente al request
-            UUID proveedorId = UUID.fromString(authentication.getName());
-            request.setProveedorId(proveedorId);
+            // 1. Obtenemos el email del token JWT
+            String emailProveedor = authentication.getName();
 
-            // Llamamos al método original del servicio sin modificar la interfaz HorarioService
+            // 2. Buscamos el usuario en la BD para sacar su UUID real
+            Usuario proveedor = usuarioRepository.findByEmail(emailProveedor)
+                    .orElseThrow(() -> new IllegalArgumentException("No se encontró el proveedor logueado"));
+
+            // 3. Asignamos el ID directamente al request
+            request.setProveedorId(proveedor.getId());
+
+            // 4. Invocamos tu servicio original
             Horario nuevoHorario = horarioService.registrarHorario(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(HorarioResponse.fromEntity(nuevoHorario));
         } catch (IllegalArgumentException e) {
