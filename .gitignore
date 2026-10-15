@@ -1,4 +1,2 @@
-.idea/
+﻿.env
 target/
-*.iml
-.DS_Store
