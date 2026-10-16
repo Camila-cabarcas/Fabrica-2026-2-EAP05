@@ -1,7 +1,10 @@
 package Fabrica_EAP05.Reservas.Service;
 
 import java.util.List;
+import java.util.UUID;
 
+import Fabrica_EAP05.Reservas.Enums.EstadoReserva;
+import Fabrica_EAP05.Reservas.Repository.ReservaServicioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,9 @@ public class HorarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ReservaServicioRepository reservaServicioRepository;
 
     public Horario registrarHorario(HorarioRequest request) {
 
@@ -70,5 +76,28 @@ public class HorarioService {
         nuevoHorario.setEstado(EstadoHorario.disponible);
 
         return horarioRepository.save(nuevoHorario);
+
+    }
+
+    // NUEVA LÓGICA HU10: BLOQUEAR HORARIO
+    // ==========================================
+    public Horario bloquearHorario(UUID horarioId, String emailProveedor) {
+        // 1. Buscar al usuario proveedor por su email (extraído del token de autenticación)
+        Usuario proveedor = usuarioRepository.findByEmail(emailProveedor)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con el email: " + emailProveedor));
+
+        // 2. Verificar que el horario exista y pertenezca a este proveedor
+        Horario horario = horarioRepository.findByIdAndProveedorId(horarioId, proveedor.getId())
+                .orElseThrow(() -> new IllegalArgumentException("El horario no existe o no pertenece al proveedor autenticado."));
+
+        // 3. Validar si existe alguna reserva con estado 'confirmada' para este horario (Task 95)
+        boolean tieneReservaConfirmada = reservaServicioRepository.existsByHorarioIdAndEstado(horarioId, EstadoReserva.confirmada);
+        if (tieneReservaConfirmada) {
+            throw new IllegalStateException("El bloqueo es rechazado porque existe una reserva confirmada asociada a este horario.");
+        }
+
+        // 4. Cambiar el estado del horario a 'bloqueado' (Task 94)
+        horario.setEstado(EstadoHorario.bloqueado);
+        return horarioRepository.save(horario);
     }
 }

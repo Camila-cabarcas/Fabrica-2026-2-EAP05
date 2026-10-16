@@ -28,4 +28,7 @@ public interface HorarioRepository extends JpaRepository<Horario, UUID> {
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin
     );
+
+    // NUEVO MÉTODO PARA HU10 (Bloquear Horario)
+    Optional<Horario> findByIdAndProveedorId(UUID id, UUID proveedorId);
 }

@@ -56,4 +56,7 @@ public interface ReservaServicioRepository extends JpaRepository<ReservaServicio
     default long contarReservasVigentesDeRecurso(UUID recursoId, LocalDateTime ahora) {
         return contarReservasPendientesDeRecurso(recursoId, EstadoReserva.confirmada, ahora);
     }
+
+    // AQUÍ SE AGREGA: Consulta para comprobar si un horario tiene una reserva confirmada (HU10)
+    boolean existsByHorarioIdAndEstado(UUID horarioId, EstadoReserva estado);
 }
