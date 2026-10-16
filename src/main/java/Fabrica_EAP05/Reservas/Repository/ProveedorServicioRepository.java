@@ -13,4 +13,7 @@ public interface ProveedorServicioRepository extends JpaRepository<ProveedorServ
     boolean existsByProveedorIdAndServicioId(UUID proveedorId, UUID servicioId);
 
     Optional<ProveedorServicio> findByProveedorIdAndServicioId(UUID proveedorId, UUID servicioId);
+
+    // Método nuevo para TU historia HU09 (Validar que el proveedor tenga al menos un servicio)
+    boolean existsByProveedorId(UUID proveedorId);
 }
