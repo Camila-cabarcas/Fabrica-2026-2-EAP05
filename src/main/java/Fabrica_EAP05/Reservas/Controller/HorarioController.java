@@ -52,7 +52,7 @@ public class HorarioController {
 
     @PatchMapping("/{id}/bloquear")
     @PreAuthorize("hasAnyRole('proveedor', 'PROVEEDOR')")
-    public ResponseEntity<?> bloquearHorario(@PathVariable UUID id, Authentication authentication) {
+    public ResponseEntity<?> bloquearHorario(@PathVariable("id") UUID id, Authentication authentication) {
         try {
             String emailProveedor = authentication.getName();
             Horario horarioBloqueado = horarioService.bloquearHorario(id, emailProveedor);
