@@ -28,10 +28,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", OffsetDateTime.now());
         body.put("mensaje", ex.getMessage());
-
-        // Credenciales inválidas / usuario no encontrado -> 401
-        // Usuario inactivo -> podrías diferenciar si quieres, pero 401 es razonable para todo login
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
