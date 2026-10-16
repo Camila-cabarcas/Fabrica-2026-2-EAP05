@@ -1,7 +1,10 @@
 package Fabrica_EAP05.Reservas.Service;
 
 import java.util.List;
+import java.util.UUID;
 
+import Fabrica_EAP05.Reservas.Enums.EstadoReserva;
+import Fabrica_EAP05.Reservas.Repository.ReservaServicioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,9 @@ public class HorarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private ReservaServicioRepository reservaServicioRepository;
 
     public Horario registrarHorario(HorarioRequest request) {
 
